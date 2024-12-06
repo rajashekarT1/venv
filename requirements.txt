@@ -1,0 +1,8 @@
+openai-whisper
+sounddevice
+scipy
+numpy
+streamlit
+speechrecognition
+soundfile
+ffmpeg-python
