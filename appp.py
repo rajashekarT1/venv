@@ -2,18 +2,18 @@ import streamlit as st
 import whisper
 import tempfile
 import os
-import ffmpeg
+from pydub import AudioSegment
 import requests
 from streamlit.components.v1 import html
 import pandas as pd
-import wave
 import io
 
 model = whisper.load_model("base")
 
 def convert_mp3_to_wav(mp3_path, wav_path):
     try:
-        ffmpeg.input(mp3_path).output(wav_path, ac=1, ar="16k").run(overwrite_output=True)
+        audio = AudioSegment.from_mp3(mp3_path)
+        audio.export(wav_path, format="wav")
         st.text(f"Audio converted to WAV: {wav_path}")
     except Exception as e:
         st.error(f"Error during conversion: {e}")
@@ -64,7 +64,7 @@ def record_audio():
     let audioBlob = null;
     let audioUrl = null;
     let isRecording = false;
-    let currentAudio = null; // Store current audio object to manage playback
+    let currentAudio = null;
 
     function Start() {
         navigator.mediaDevices.getUserMedia({ audio: true })
@@ -97,13 +97,12 @@ def record_audio():
 
     function Play() {
         if (currentAudio) {
-            // If there is already an audio playing, stop it
             currentAudio.pause();
             currentAudio.currentTime = 0;
         }
 
         let audio = new Audio(audioUrl);
-        currentAudio = audio; // Update the current audio
+        currentAudio = audio;
         audio.play();
         audio.onended = function() {
             document.getElementById("playButton").style.display = "inline-block";
@@ -117,7 +116,6 @@ def record_audio():
         a.click();
     }
 </script>
-
 
     <div>
         <button onclick="Start()" title="Start"><span class="icon">🔘</span></button>
@@ -154,7 +152,7 @@ def load_audio_history():
         return pd.DataFrame(columns=["audio_url", "transcription", "timestamp"])
 
 def main():
-    st.markdown("### Recorder")
+    st.markdown("### Audio Recorder and Transcriber")
 
     html_code = record_audio()
     html(html_code)
@@ -173,7 +171,6 @@ def main():
 
             if transcription:
                 st.text_area("Transcribed Text", transcription, height=200)
-
                 save_recorded_file(audio_url, transcription)
 
         except Exception as e:
@@ -197,11 +194,11 @@ def main():
                     convert_mp3_to_wav(tmp_file_path, wav_path)
                 else:
                     wav_path = tmp_file_path
+
                 transcription = transcribe_audio(wav_path)
 
                 if transcription:
                     st.text_area("Transcribed Text", transcription, height=200)
-
                     save_recorded_file(wav_path, transcription)
 
             except Exception as e:
@@ -212,5 +209,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
