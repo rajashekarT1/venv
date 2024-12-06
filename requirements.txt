@@ -6,3 +6,4 @@ streamlit
 speechrecognition
 soundfile
 ffmpeg-python
+imageio-ffmpeg
